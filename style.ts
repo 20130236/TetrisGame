@@ -1,0 +1,81 @@
+import {SafeAreaView, View, Button, ViewProps, StatusBar, StyleSheet} from 'react-native';
+export const styleBtn = StyleSheet.create({
+    container: {
+        alignItems: 'center',   },   arrow: {
+        // borderWidth: 1,
+        // borderColor: 'grey',
+        // borderRadius: 15,
+        // padding: 15,
+        // backgroundColor: 'red',
+        alignSelf: 'center',   },   arrowTopAligned: {
+            position: 'absolute',
+            top: 0,
+            alignItems: 'stretch',
+            width: 0,
+            height: 0,
+            //backgroundColor: "transparent",
+            borderStyle: "solid",
+            borderLeftWidth: 30,
+            borderRightWidth: 30,
+            borderBottomWidth: 50,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+            borderBottomColor: "red", },   arrowBottomAligned: {
+            position: 'absolute',
+            bottom: 0,
+            alignItems: 'stretch',  
+            width: 0,
+            height: 0,
+            top:"60%",
+            //backgroundColor: "transparent",
+            borderStyle: "solid",
+            borderLeftWidth: 30,
+            borderRightWidth: 30,
+            borderBottomWidth: 50,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+            borderBottomColor: "red",   
+                 transform: [{ rotate: "180deg" }],
+        },   containerLeftAligned: {
+        position: 'absolute',
+        left: 0,
+        top: '30%',
+        alignItems: 'stretch',   },   arrowLeftAligned: {
+        textAlign: 'center',
+        left: 0,
+        position: 'absolute',
+           
+            alignItems: 'stretch',
+            width: 0,
+            height: 0,
+            //backgroundColor: "transparent",
+            borderStyle: "solid",
+            borderLeftWidth: 30,
+            borderRightWidth: 30,
+            borderBottomWidth: 50,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+            borderBottomColor: "red",   
+                
+        transform: [{ rotate: '-90deg' }],   },   arrowRightAligned: {
+        textAlign: 'center',
+        right: 0,
+        alignItems: 'stretch',
+            width: 0,
+            height: 0,
+            //backgroundColor: "transparent",
+            borderStyle: "solid",
+            borderLeftWidth: 30,
+            borderRightWidth: 30,
+            borderBottomWidth: 50,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+            borderBottomColor: "red", 
+        transform: [{ rotate: '90deg' }],   },   containerRightAligned: {
+        position: 'absolute',
+        right: 0,
+        top: '30%',
+        
+        alignItems: 'stretch',   },
+})
+
