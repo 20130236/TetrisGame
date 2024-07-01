@@ -29,8 +29,8 @@ class Block {
         return cube;
     }
 
-    public get position(): Vector3 { //position of block based on parent block, used for moving
-        return this.parentCube.position; //may not be accurate for pivoted blocks - specific to each class?
+    public get position(): Vector3 { 
+        return this.parentCube.position; 
     }
 
     public rotate(axis: string, rotation: number): void  { //if hasPivot - rotate around pivot instead (parent sphere)
@@ -52,7 +52,7 @@ class Block {
     public becomeChild(cube: Mesh ): Mesh {
         cube = this.parentCube.clone();
         cube = this.createEdges(cube);
-        cube.parent = this.parentCube;
+        //cube.parent = this.parentCube;
         return cube;
     }
 

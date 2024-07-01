@@ -29,7 +29,9 @@ class Game {
     private advancedTexture! : AdvancedDynamicTexture
     public gameOverAdvancedTexture! : AdvancedDynamicTexture
     private isAiActive: boolean;
+    private rdMove: boolean;
     private findBestMove: boolean;
+    private cloneCheck!:Block;
 
     constructor(size: number, scene: Scene, isAiActive:boolean) {
         this.scene = scene;
@@ -41,7 +43,7 @@ class Game {
         this.scoreCount = 0;
         this.isAiActive = isAiActive;
         this.findBestMove = false;
-
+        this.rdMove = false;
 
         Tools.LoadFileAsync("https://raw.githubusercontent.com/CedricGuillemet/dump/master/droidsans.ttf", true).then(
                     (data: ArrayBuffer | string) => 
@@ -87,13 +89,11 @@ class Game {
     }
 
     public drawBlock() { 
-        if(this.isAiActive){
-            this.findBestMove = true;
-        } 
+
 
         var random = Math.floor(Math.random() * 3);
 
-        //random = 1;
+        //random = 2;
         switch(random) {
             // case 0:
             //     this.block = new Cube(this.scene);
@@ -111,9 +111,22 @@ class Game {
             //     this.block = new IBlock(this.scene); 
             //     break;
         }
+            if(this.isAiActive){
+                this.findBestMove = true;
+            } else {
+                this.rdMove = true;
+            }
+       
         this.checkCollision();
        
-        this.fallingInterval = setInterval(() => { 
+        this.fallingInterval = setInterval(() => {
+            if(this.rdMove){
+                this.randomMove();
+                //return;
+            }
+            // if(this.findBestMove){
+            //     this.bestMove();
+            // }
             if (!this.gameBoard.inGrid(this.block.getPositions()) && 
             !this.gameBoard.canMoveWhenOutGrid(this.block.getPositions(), "down")) {
                 console.log("gameOver");
@@ -298,7 +311,7 @@ class Game {
                 if (y !== 0) {
                     layerNums.push(y);
                 }
-                this.scoreCount += size * size; // điểm 1 hàng được cleared 
+                this.scoreCount += size; // điểm 1 hàng được cleared 
                 fullLayer = false;
                 
                 // update score gui
@@ -588,6 +601,7 @@ class Game {
                             case "backward": //backward
                                 if (this.gameBoard.inGrid(this.block.getPositions()) && this.gameBoard.canMove(this.block.getPositions(), "back")) {
                                     this.block.position.z -= 1;
+                                    this.block.parentCube.position.z -=1;
                                     this.scene.render();
                                     this.fixRotationOffset();
                                 }
@@ -628,29 +642,30 @@ class Game {
                                    
                                     console.log("Before rotate x",this.block.getPositions()[3]);
                                     this.block.rotate("x", this._rotation); //rotate child 1st to se if it intersects?
-                                    this.scene.render();
-                                    this.fixRotationOffset();
-                                    //console.log("this.gameBoard.positions[0][1][4.5]",this.gameBoard.positions[0][-6][0]);
-                                    console.log("After rotate x",this.block.getPositions()[3]);
+                                    // this.block.parentCube.rotate(Axis.X, Math.PI/2, Space.WORLD);
+                                    // this.scene.render();
+                                    // this.fixRotationOffset();
+                                    // //console.log("this.gameBoard.positions[0][1][4.5]",this.gameBoard.positions[0][-6][0]);
+                                    // console.log("After rotate x",this.block.getPositions()[3]);
                                     }
                                 break;
 
                             case "rotateY":
-                                // if (this.canRotate("y")) {
+                                 if (this.canRotate("y")) {
                                     console.log("rotate y");
                                     this.block.rotate("y", this._rotation);
                                     this.scene.render();
                                     this.fixRotationOffset();
-                                // }
+                                 }
                                 break;
 
                             case "rotateZ":
-                                // if (this.canRotate("z")) {
+                                 if (this.canRotate("z")) {
                                     console.log("rotate z");
                                     this.block.rotate("z", this._rotation);
                                     this.scene.render(); 
                                     this.fixRotationOffset();
-                                // }
+                                 }
                                 break;
                         }
 
@@ -735,13 +750,12 @@ class Game {
         var height = this.gameBoard.height;
         var size = this.gameBoard.size;
         var fullLayer: boolean;
-        for (var y = 0; y < height; y++) { //for each layer of y height...
+        for (var y = 0; y < height; y++) {
             fullLayer = true;
             for (var x = 0; x < size; x++) {
                 for (var z = 0; z < size; z++) {
-                    if (this.cloneSpaces[x][y][z] === false) { //if element in layer in false
+                    if (this.cloneSpaces[x][y][z] === false) { 
                         fullLayer = false
-                        //fullLayer stays true if element in layer never = false
                     }
                 }
             }
@@ -770,11 +784,11 @@ class Game {
         var size = this.gameBoard.size;
         var height = this.gameBoard.height;
 
-        for (var x = 0; x < size; x++) { //for each layer of y height...
+        for (var x = 0; x < size; x++) { 
             for (var z = 0; z < size; z++) {
                 var check = false;
                 for (var y = 0; y < height; y++) {
-                    if (this.cloneSpaces[x][y][z] === true) { //if element in layer in false
+                    if (this.cloneSpaces[x][y][z] === true) { 
                         check = true;
                     } else if (this.cloneSpaces[x][y][z] === false && check){
                         result++;
@@ -792,22 +806,12 @@ class Game {
         var result = 0;
 
         for(var x = 0; x < size; x++){
-            // if(x == size - 1){
-            //     for (var z = 0; z < size - 1; z++) {
-            //         result += Math.abs(this.columnHeight(x,z) - this.columnHeight(x,z+1));
-            //     }
-            // }
             for (var z = 0; z < size - 1; z++) {
                 result += Math.abs(this.columnHeight(x,z) - this.columnHeight(x,z+1));
             }
         }
 
         for(var z = 0; z < size; z++){
-            // if(x == size - 1){
-            //     for (var z = 0; z < size - 1; z++) {
-            //         result += Math.abs(this.columnHeight(x,z) - this.columnHeight(x,z+1));
-            //     }
-            // }
             for (var x = 0; x < size - 1; x++) {
                 result += Math.abs(this.columnHeight(x,z) - this.columnHeight(x+1,z));
             }
@@ -817,51 +821,36 @@ class Game {
 
     // 
     private columnHeight(x: number,z: number):number{
-        //var size = this.gameBoard.size;
         var height = this.gameBoard.height;
-        // for (; y < height && !check; y++) {
-        //     for (var z = 0; z < this.gameBoard.spaces[x][y].length && !check; z++) {
-        //         if (this.gameBoard.spaces[x][y][z] === false){
-        //             check = true;
-        //         }  
-        //     }
-        // }
-
              var y = 0;
-             //var check = false;
                      for (; y < height; y++) {
                          if (this.cloneSpaces[x][y][z] === true){
                             break;
                        }
                      }
-                     return height - y;
-             
-        // for (var x = 0; x < _size; x++) {
-        //     for (var z = 0; z < _size ; z++) {
-        //      var y = 0;
-        //      var check = false;
-        //              for (; y < _height && !check; y++) {
-        //                  if (spaces[x][y][z] === false){
-        //                     check = true;
-        //                }
-        //              }
-        //              console.log(_height - y);  
-        //        }
-        //      }
+                     return height - y;         
+    }
+
+    private cloningPos(position:Vector3):Vector3{
+        var result:Vector3 = new Vector3(position.x,position.y,position.z);
+        return result;
     }
    
     private bestMove():void{
+        var orign = this.cloningPos(this.block.position);
         this.findBestMove = false;
         console.log("in best move");
         this.cloneSpaces = this.cloningSpace();
         this.cloneBlock = this.cloningBlock();
+        //this.cloneCheck = this.cloningBlock();
         this.dummy =  this.cloningBlock(); 
         this.dummy.position.y = this.block.position.y;
+        //this.cloneCheck.position.y = this.block.position.y;
         this.scene.render();
         this.fixRotationOffsetDummy();
         this.cloneBlock.uncouple();
         this.cloneBlock.setRelPos(this.dummy.getPositions());
-        
+        this.dummy.setVisible(false);
         this.cloneBlock.setVisible(false);
         var bestScore = -Infinity;
         var bestPositon:Vector3 = this.cloningPosition(this.cloneBlock.position);
@@ -881,13 +870,13 @@ class Game {
                         // this.scene.render();
                         // this.fixRotationOffsetCloneBlock();
 
-                        // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+                        // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
                         //     continue;
                         // }
 
                         // while(true){
-                        //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+                        //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+                        //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
                         //         break;
                         //     }
                         //     this.cloneBlock.position.y-=1;
@@ -910,18 +899,17 @@ class Game {
                         this.setPostionCloneBlock(x,z);
                         //console.log("clone block relPos",this.cloneBlock.getRelPos());
                         
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                         
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
                             this.fixOffSetCloneBlock();
-                            //console.log("Clone block move down",this.cloneBlock.getRelPos());
                         }
                         
                         this.cloneBlock.moveRelPosUp();
@@ -932,10 +920,12 @@ class Game {
                         var score = this.computeScore();
                         console.log("firt score",score);
                         this.resetCloneSpaces(this.cloneBlock.getRelPos());
-
+                        
 
 
                 if(score > bestScore){
+                    
+
                     bestScore = score;
                     bestPositon = this.cloningPosition(this.cloneBlock.position);
                     
@@ -955,62 +945,34 @@ class Game {
         //return;
         // rotate 0y
           for(var ystep = 1; ystep < 4; ystep++){
-                    //console.log("dummy pos",this.dummy.getPositions());
                     this.dummy.rotate("y",this._rotation);
                     this.scene.render();
                     this.fixRotationOffsetDummy();
-                    //this.cloneBlock.uncouple();
                     this.cloneBlock.setRelPos(this.dummy.getPositions());
-
-                    //console.log("block", this.block.getPositions());
-                    console.log("dummy rotate y", this.dummy.getPositions());
-                    console.log("cloneblock rotate y", this.cloneBlock.getRelPos());
                     
                     for (var x = 0; x < size; x++) {
                         for (var z = 0; z < size ; z++) {
-
-                            // this.dummy.position.x = this.gameBoard.positions[x][0][z].x;
-                            // this.dummy.position.z = this.gameBoard.positions[x][0][z].z;
-                            // this.scene.render();
-                            // console.log("dummy pos", this.dummy.getPositions());
-                            //this.dummy
-                            //console.log("dummy pos", this.dummy.getPositions());
-    
-                            //console.log("x",x + "z",z);
-                            
                             this.setPostionCloneBlock(x,z);
-                            console.log("clone block relPos after set",this.cloneBlock.getRelPos());
-
-                            if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
-                                console.log("out grid");
+                            if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                                 continue;
                             }
-    
                             while(true){
-                                if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                                || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                                if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                                || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                     break;
                                 }
                                 this.cloneBlock.moveRelPosDown();
                                 this.fixOffSetCloneBlock();
                             }
-    
-                            this.cloneBlock.moveRelPosUp();
-                            this.fixOffSetCloneBlock();
-        
+                        this.cloneBlock.moveRelPosUp();
+                        this.fixOffSetCloneBlock();
                         this.updateCloneSpaces(this.cloneBlock.getRelPos());
                         var score = this.computeScore();
                         this.resetCloneSpaces(this.cloneBlock.getRelPos());
-                        //this.cloneSpaces = this.cloningSpace();
-                        console.log("score:",score);
                         if(score > bestScore){
-                            
                             bestScore = score;
                             bestPositon = this.cloningPosition(this.cloneBlock.position);
-                            //rotate = "x";
-                            //bestStep = 0;
-                            bestYStep = ystep;
-                            
+                            bestYStep = ystep;                
                             }
                         }
                     }
@@ -1031,48 +993,18 @@ class Game {
             
             for (var x = 0; x < size; x++) {
                 for (var z = 0; z < size ; z++) {
-                    
-                        // this.cloneBlock.position.x = this.gameBoard.positions[x][0][z].x;
-                        // this.cloneBlock.position.z = this.gameBoard.positions[x][0][z].z;
-                        // this.cloneBlock.position.y = this.block.position.y;
-                        
-                        // this.scene.render();
-                        // this.fixRotationOffsetCloneBlock();
-                        // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
-                        //     continue;
-                        // }
 
-                        // while(true){
-                        //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
-                        //         break;
-                        //     }
-                        //     this.cloneBlock.position.y-=1;
-                        //     this.scene.render();
-                        //     this.fixRotationOffsetCloneBlock();
-                        // }
-
-                        // this.cloneBlock.position.y+=1;
-                        // this.scene.render();
-                        // this.fixRotationOffsetCloneBlock();
-
-                        // this.dummy.position.x = this.gameBoard.positions[x][0][z].x;
-                        // this.dummy.position.z = this.gameBoard.positions[x][0][z].z;
-                        // this.scene.render();
-                        // console.log("dummy pos", this.dummy.getPositions());
-                        // //this.dummy
-                        // console.log("dummy pos", this.dummy.getPositions());
 
                         this.setPostionCloneBlock(x,z);
                         
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
 
                         
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -1112,7 +1044,6 @@ class Game {
                 this.dummy.rotate("y",this._rotation);
                 this.scene.render();
                 this.fixRotationOffsetDummy();
-                //this.cloneBlock.uncouple();
                 this.cloneBlock.setRelPos(this.dummy.getPositions());
                 
                 for (var x = 0; x < size; x++) {
@@ -1129,13 +1060,13 @@ class Game {
                         
                         this.setPostionCloneBlock(x,z);
 
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
 
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -1150,8 +1081,10 @@ class Game {
                     this.resetCloneSpaces(this.cloneBlock.getRelPos());
                     //this.cloneSpaces = this.cloningSpace();
                     console.log("score:",score);
+                      
+                   
                     if(score > bestScore){
-                        
+                     
                         bestScore = score;
                         bestPositon = this.cloningPosition(this.cloneBlock.position);
                         rotate = "x";
@@ -1181,13 +1114,13 @@ class Game {
                         
                         // this.scene.render();
                         // this.fixRotationOffsetCloneBlock();
-                        // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+                        // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
                         //     continue;
                         // }
 
                         // while(true){
-                        //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+                        //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+                        //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
                         //         break;
                         //     }
                         //     this.cloneBlock.position.y-=1;
@@ -1208,14 +1141,14 @@ class Game {
 
                         this.setPostionCloneBlock(x,z);
                         
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
 
                         
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -1264,13 +1197,13 @@ class Game {
                             
                             // this.scene.render();
                             // this.fixRotationOffsetCloneBlock();
-                            // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+                            // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
                             //     continue;
                             // }
     
                             // while(true){
-                            //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                            //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+                            //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+                            //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
                             //         break;
                             //     }
                             //     this.cloneBlock.position.y-=1;
@@ -1291,13 +1224,13 @@ class Game {
     
                             this.setPostionCloneBlock(x,z);
                             
-                            if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                            if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                                 continue;
                             }
     
                             while(true){
-                                if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                                || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                                if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                                || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                     break;
                                 }
                                 this.cloneBlock.moveRelPosDown();
@@ -1371,13 +1304,13 @@ class Game {
                         
                         // this.scene.render();
                         // this.fixRotationOffsetCloneBlock();
-                        // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+                        // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
                         //     continue;
                         // }
 
                         // while(true){
-                        //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+                        //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+                        //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
                         //         break;
                         //     }
                         //     this.cloneBlock.position.y-=1;
@@ -1396,14 +1329,14 @@ class Game {
                         //this.scene.render();
                         //this.fixOffSetCloneBlock();
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
 
                     
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -1451,13 +1384,13 @@ class Game {
                         
                         // this.scene.render();
                         // this.fixRotationOffsetCloneBlock();
-                        // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+                        // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
                         //     continue;
                         // }
 
                         // while(true){
-                        //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+                        //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+                        //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
                         //         break;
                         //     }
                         //     this.cloneBlock.position.y-=1;
@@ -1471,14 +1404,14 @@ class Game {
 
                         this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
 
                     
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -1532,13 +1465,13 @@ class Game {
                     
             //         // this.scene.render();
             //         // this.fixRotationOffsetCloneBlock();
-            //         // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+            //         // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
             //         //     continue;
             //         // }
 
             //         // while(true){
-            //         //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-            //         //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+            //         //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+            //         //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
             //         //         break;
             //         //     }
             //         //     this.cloneBlock.position.y-=1;
@@ -1554,13 +1487,13 @@ class Game {
 
             //         this.setPostionCloneBlock(x,z);
                     
-            //         if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+            //         if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
             //             continue;
             //         }
 
             //         while(true){
-            //             if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-            //             || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+            //             if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+            //             || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
             //                 break;
             //             }
             //             this.cloneBlock.moveRelPosDown();
@@ -1607,13 +1540,13 @@ class Game {
                         
             //             // this.scene.render();
             //             // this.fixRotationOffsetCloneBlock();
-            //             // if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+            //             // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
             //             //     continue;
             //             // }
 
             //             // while(true){
-            //             //     if(!this.gameBoard.inGrid2(this.cloneBlock.getPositions()) 
-            //             //     || this.gameBoard.isOccupied3(this.cloneBlock.getPositions())){
+            //             //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
+            //             //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
             //             //         break;
             //             //     }
             //             //     this.cloneBlock.position.y-=1;
@@ -1629,14 +1562,14 @@ class Game {
 
             //             this.setPostionCloneBlock(x,z);
                     
-            //         if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+            //         if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
             //             continue;
             //         }
 
             //         //this.cloneBlock.uncouple();
             //         while(true){
-            //             if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-            //             || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+            //             if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+            //             || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
             //                 break;
             //             }
             //             this.cloneBlock.moveRelPosDown();
@@ -1690,13 +1623,13 @@ class Game {
                 for (var z = 0; z < size ; z++) {
                 
                     this.setPostionCloneBlock(x,z);            
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -1733,13 +1666,13 @@ class Game {
                         this.setPostionCloneBlock(x,z);
                         console.log("z block step1 rorate y",this.cloneBlock.getRelPos());
                         
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                         
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -1800,13 +1733,13 @@ class Game {
                    
                     this.setPostionCloneBlock(x,z);
                         
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -1843,13 +1776,13 @@ class Game {
                     
                         this.setPostionCloneBlock(x,z);
                         
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                   
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -1893,7 +1826,7 @@ class Game {
             //             this.cloneBlock.position.z = this.gameBoard.positions[x][0][z].z;
                         
                     
-            //         if(this.gameBoard.inGrid2(this.cloneBlock.getPositions()) === false){
+            //         if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
             //             continue;
             //         }
                     
@@ -1944,13 +1877,13 @@ class Game {
                 
                     this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -1986,13 +1919,13 @@ class Game {
                     for (var z = 0; z < size ; z++) {
                     
                         this.setPostionCloneBlock(x,z);
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                   
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -2033,13 +1966,13 @@ class Game {
             
                     this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
                     console.log("cloneBlock RelPos",this.cloneBlock.getRelPos());
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -2076,13 +2009,13 @@ class Game {
                     for (var z = 0; z < size ; z++) {
                     
                         this.setPostionCloneBlock(x,z);
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                         
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -2123,13 +2056,13 @@ class Game {
 
                     this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -2165,13 +2098,13 @@ class Game {
                     for (var z = 0; z < size ; z++) {
                     
                         this.setPostionCloneBlock(x,z);
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                   
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -2218,13 +2151,13 @@ class Game {
 
                     this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -2260,13 +2193,13 @@ class Game {
                     for (var z = 0; z < size ; z++) {
                     
                         this.setPostionCloneBlock(x,z);
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                   
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -2313,13 +2246,13 @@ class Game {
                 
                     this.setPostionCloneBlock(x,z);
                     
-                    if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                    if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                         continue;
                     }
               
                     while(true){
-                        if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                        || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                        if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                        || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                             break;
                         }
                         this.cloneBlock.moveRelPosDown();
@@ -2355,13 +2288,13 @@ class Game {
                     for (var z = 0; z < size ; z++) {
                     
                         this.setPostionCloneBlock(x,z);
-                        if(this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) === false){
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
                             continue;
                         }
                   
                         while(true){
-                            if(!this.gameBoard.inGrid2(this.cloneBlock.getRelPos()) 
-                            || this.gameBoard.isOccupied3(this.cloneBlock.getRelPos())){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
                                 break;
                             }
                             this.cloneBlock.moveRelPosDown();
@@ -2395,14 +2328,12 @@ class Game {
         
         }
 
-        this.block.position.x = bestPositon.x;
-        this.block.position.z = bestPositon.z;
 
-        this.scene.render();
-        this.fixRotationOffset();
+        //this.block.position.y = 6.5;
 
-        console.log("best positions",this.block.getPositions());
-        console.log("best ystep",bestYStep);
+
+
+
 
         for(var i = 1; i <= bestStep;i++){
             this.block.rotate(rotate,this._rotation);
@@ -2416,10 +2347,76 @@ class Game {
             this.fixRotationOffset();
         }
 
+        
+        this.block.position.x = bestPositon.x;
+        this.block.position.z = bestPositon.z;
+    
+        this.scene.render();
+        this.fixRotationOffset();
+
+        if(!this.gameBoard.inGrid(this.block.getPositions())){
+            this.block.position.x = orign.x;
+            this.block.position.z = orign.z;
+        }
+
+
+        console.log("best positions",this.block.getPositions());
+        console.log("best ystep",bestYStep);
+
         console.log("Beststep:" ,bestStep);
         console.log("rotate:" ,rotate);
         console.log("BestScore:" ,bestScore);
         console.log("block:" ,this.cloneBlock.type);
+
+    }
+
+    private randomMove():void{
+        this.rdMove = false;
+        //this.cloneBlock=  this.cloningBlock();
+        
+        var size = this.gameBoard.size;
+        var axis:string []  = ["x","z"];
+        var rotations:number []  = [Math.PI/2,Math.PI,3*Math.PI/2,2*Math.PI];
+        var rdAxis = axis[Math.floor(Math.random() * axis.length)];
+        
+        var rdRotateY = rotations[Math.floor(Math.random() * rotations.length)];;
+        var rdRotation = rotations[Math.floor(Math.random() * rotations.length)];
+        this.block.rotate(rdAxis,rdRotation);
+        this.scene.render();
+        this.fixRotationOffset();
+        this.block.rotate("y",rdRotateY);
+        this.scene.render();
+        this.fixRotationOffset();
+        var rdPositions: Vector3[] = new Array();
+        //this.cloneBlock.position.y = 6.5;
+
+        for (var x = 0; x < size; x++) {
+            for (var z = 0; z < size ; z++) {
+                this.block.position.x = this.gameBoard.positions[x][0][z].x;
+                this.block.position.z = this.gameBoard.positions[x][0][z].z;
+                this.scene.render();
+                this.fixRotationOffset();
+                
+                // if(!this.gameBoard.inGridXZ(this.cloneBlock.getPositions())){
+                //     continue;
+                // }  
+                // rdPositions.push(new Vector3(this.gameBoard.positions[x][0][z].x,0,this.gameBoard.positions[x][0][z].z));                                       
+                if(this.gameBoard.inGridXZ(this.block.getPositions())){
+                    rdPositions.push(new Vector3(this.gameBoard.positions[x][0][z].x,0,this.gameBoard.positions[x][0][z].z));
+                }      
+            }
+        }''
+        console.log("in rd Move");
+        console.log(rdPositions);
+        var rdPosition = rdPositions[Math.floor(Math.random() * rdPositions.length)];;
+        this.block.position.x = rdPosition.x;
+        this.block.position.z = rdPosition.z;
+        //this.block.position.y = 0;
+
+        this.scene.render();
+        this.fixRotationOffset();
+        console.log(rdPosition);
+        console.log("pos after rd",this.block.getPositions());
     }
 
     private setPostionCloneBlock(x:number,z:number):void{
@@ -2558,6 +2555,23 @@ class Game {
         // console.log(this.block.getPositions());
     }
 
+    private fixRotationOffsetCloneCheck(): void { 
+        var fixpos = this.cloneCheck.getPositions();
+        
+        for (var i = 0; i < fixpos.length; i++) {
+            if (Math.abs(fixpos[i].x) > 0 && Math.abs(fixpos[i].x) < 0.1) { 
+                fixpos[i].x = Math.floor(Math.abs(fixpos[i].x));
+            }
+            if (Math.abs(fixpos[i].y) > 0 && Math.abs(fixpos[i].y) < 0.1) {
+                fixpos[i].y = Math.floor(Math.abs(fixpos[i].y));
+            }
+            if (Math.abs(fixpos[i].z) > 0 && Math.abs(fixpos[i].z) < 0.1) {          
+                fixpos[i].z = Math.floor(Math.abs(fixpos[i].z));              
+            }
+        }
+        // console.log(this.block.getPositions());
+    }
+    
 
 }
 

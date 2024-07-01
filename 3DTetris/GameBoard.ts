@@ -29,23 +29,23 @@ class GameBoard {
         var groundGrid = this.createGrid();
         groundGrid.backFaceCulling = false;
     
-        var ground = MeshBuilder.CreateGround("ground", {width: this._size, height: this._size}, this._scene);
+        var ground = MeshBuilder.CreateGround("ground", 
+            {width: this._size, height: this._size}, this._scene);
+        ground.position.y = -5;
         ground.material = groundGrid;
         ground.position.y = (this._size === 7) ? -6 : -5;
         this._groundlvl = ground.position.y + 0.5;
         this._ground = ground;
 
-        //front & back planes
+        //front & back 
         var fplane = this.createPlane(0, 0, -this._size/2, Math.PI);
         var bplane = this.createPlane(0, 0, this._size/2, 0);
-        // this._fplane = fplane;
-        // this._bplane = bplane;
 
-        //right & left planes
+        //right & left 
         var rplane = this.createPlane(this._size/2, 0, 0, Math.PI / 2);
         var lplane = this.createPlane(-this._size/2, 0, 0, -Math.PI/2);
-        // this._rplane = rplane;
-        // this._lplane = lplane;
+        
+
     }
 
     private createGrid(): GridMaterial {
@@ -189,6 +189,17 @@ class GameBoard {
         for (var i = 0; i < blockpos.length; i++) {
             if ( Math.abs(blockpos[i].x) > Math.floor(this._size/2) || 
                     Math.abs(blockpos[i].y) > ((this._height/2)-0.5) || Math.abs(blockpos[i].z) > Math.floor(this._size/2)) {
+                return false;
+            }
+        }
+        return true; 
+    }
+
+    public inGridXZ(blockpos: Vector3[]): boolean { 
+
+        for (var i = 0; i < blockpos.length; i++) {
+            if ( Math.abs(blockpos[i].x) > Math.floor(this._size/2) || 
+                Math.abs(blockpos[i].z) > Math.floor(this._size/2)) {
                 return false;
             }
         }
