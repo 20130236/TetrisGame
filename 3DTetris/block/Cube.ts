@@ -40,8 +40,8 @@ class Cube extends Block {
         this._cube7 = this.becomeChild(this._cube7);
         this._cube8 = this.becomeChild(this._cube8);
 
-        this.parentCube = this.createCube(5.5, -1);
-        this._cube2 = this.parentCube.clone();
+        //this.parentCube = this.createCube(5.5, -1);
+        //this._cube2 = this.parentCube.clone();
         this._cube2.parent = this.parentCube;
         this._cube2.position = new Vector3(0, 0, 1); //bottom,left,back
 

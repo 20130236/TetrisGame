@@ -11,7 +11,7 @@ class IBlock extends Block {
 
     constructor(scene: Scene) {
         super(4, scene);
-        this.type = "big tower";
+        this.type = "I block";
         this.create();
         this.setCubes();
     }

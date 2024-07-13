@@ -48,6 +48,8 @@ class GameBoard {
 
     }
 
+    
+
     private createGrid(): GridMaterial {
         var grid = new GridMaterial("grid", this._scene);
         grid.lineColor = Color3.White();
@@ -147,6 +149,7 @@ class GameBoard {
 
     // block vẫn trong trong gameboard khi vị trí của các cube vẫn ở trong gameboard
     public inGrid(blockpos: Vector3[]): boolean { 
+        //console.log("postion in grid", blockpos);
         // var inBounds: boolean;
         // var tracker = 0; //
         // for (var x = 0; x < this._size; x++) {
@@ -311,7 +314,7 @@ class GameBoard {
 
     // check dụng chạm block trong game 
     public isOccupied(potential: Vector3[]): boolean { 
-
+        //console.log("postion in occupied", potential);
         var orignX = Math.floor(this._size/2);
         var orignY = (this._height/2)-0.5;
         var orignZ = Math.floor(this._size/2);

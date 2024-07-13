@@ -37,7 +37,7 @@ class LBlock extends Block {
         this._cube4.parent = this.parentCube;
         this._cube4.position = new Vector3(1, 0, 0); //right, bottom
 
-
+        
         
         
     }

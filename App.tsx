@@ -24,6 +24,8 @@ import TBlock from './3DTetris/block/TBlock';
 import Block from './3DTetris/block/Block';
 import Game from './3DTetris/Game';
 import { styleBtn } from './style';
+import GameBoard from './3DTetris/GameBoard';
+import LBlock from './3DTetris/block/LBlock';
 
 const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
   const engine = useEngine();
@@ -31,6 +33,7 @@ const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
   const [camera, setCamera] = useState<Camera>();
   const [scene, setScene] = useState<Scene>();
   const [game,setGame] = useState<Game>();
+  const [gameBoard,setGameBoard] = useState<GameBoard>();
   const [gameOver,setGameOver] = useState<Boolean>(false);
   const [advancedTexture,setAdvancedTexture] = useState<AdvancedDynamicTexture>();
   
@@ -40,7 +43,13 @@ const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
               const scene = new Scene(engine);
               setScene(scene);
               if(scene){
+                   //setGameBoard(new GameBoard(3,scene));
+                  //  new LBlock(scene);
                    
+                  //  setInterval(() => {
+                  //   var random = Math.floor(Math.random() * 3) + 1;
+
+                  //  })
                   //Load .tiff font file
                   Tools.LoadFileAsync("https://raw.githubusercontent.com/CedricGuillemet/dump/master/droidsans.ttf", true).then(
                     (data: ArrayBuffer | string) => 
@@ -223,6 +232,7 @@ const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
     } else {
       advancedTexture?.dispose();
       setGame(new Game(3, scene!,true));
+      //gameBoard
     }
   }
      
@@ -263,7 +273,33 @@ const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
           </Pressable>
           </View>
           <View style= {{flex:2,width:"50%"}}>
-            <TouchableOpacity style={{width:"50%",  marginTop: 5, 
+
+          <View style={{width:"98%",display:"flex",
+            justifyContent:"space-between",alignItems:"center",
+            marginRight:"auto",marginBottom:20,
+            marginLeft:"auto",flexDirection:"row"}}>
+              <TouchableOpacity style={{width:"45%",marginTop: 15}}>
+                <Button
+                    onPress={rotateX}
+                    title="Rx"
+                    color="#841584"
+                    accessibilityLabel="rotateX"
+                  />
+
+              </TouchableOpacity>
+               
+                <TouchableOpacity style={{width:"45%",marginTop: 15}}>
+                <Button
+                    onPress={down}
+                    title="Down"
+                    color="#841584"
+                    accessibilityLabel="Down"
+                  />
+
+              </TouchableOpacity>
+            </View>
+
+            {/* <TouchableOpacity style={{width:"45%",  marginTop: 5, 
             marginRight:"auto", marginBottom:20,
             marginLeft:"auto",}}>
               <Button
@@ -274,6 +310,17 @@ const EngineScreen: FunctionComponent<ViewProps> = (props: ViewProps) => {
                 accessibilityLabel="rotateX"
               /> 
             </TouchableOpacity>
+            <TouchableOpacity style={{width:"45%",  marginTop: 5, 
+            marginRight:"auto", marginBottom:20,
+            marginLeft:"auto",}}>
+              <Button
+
+                onPress={down}
+                title="Down"
+                color="#841584"
+                accessibilityLabel="Down"
+              /> 
+            </TouchableOpacity> */}
             <View style={{width:"98%",display:"flex",
             justifyContent:"space-between",alignItems:"center",
             marginRight:"auto",marginBottom:20,

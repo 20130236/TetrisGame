@@ -1,7 +1,7 @@
 import {Vector3, HemisphericLight, MeshBuilder, Material, 
     Color3, ShadowGenerator, PointLight, DirectionalLight, StandardMaterial, 
     FreeCamera, MirrorTexture, RefractionTexture, Plane,Tools,
-    ActionManager,InterpolateValueAction, SetValueAction, PredicateCondition,Scene,Mesh,Color4,Axis,Space,
+    ActionManager,InterpolateValueAction, SetValueAction, PredicateCondition,Sound,Scene,Mesh,Color4,Axis,Space,
   } from '@babylonjs/core';
 import{AdvancedDynamicTexture,TextBlock,Line,Control} from "@babylonjs/gui";
 import GameBoard from './GameBoard';
@@ -32,6 +32,9 @@ class Game {
     private rdMove: boolean;
     private findBestMove: boolean;
     private cloneCheck!:Block;
+    private moveSound:Sound;
+    private scoreSound:Sound;
+    private interactSound:Sound;
 
     constructor(size: number, scene: Scene, isAiActive:boolean) {
         this.scene = scene;
@@ -44,6 +47,24 @@ class Game {
         this.isAiActive = isAiActive;
         this.findBestMove = false;
         this.rdMove = false;
+
+        this.moveSound = new Sound("moveSound","./sound/move.wav", this.scene, null, {
+            loop: false,
+            autoplay: true,
+            //volume: 1.0
+        });
+   
+        this.scoreSound = new Sound("scoreSound", "./sound/score.wav", this.scene, null, {
+            loop: false,
+            autoplay: true,
+            volume: 1.0
+        });
+
+        this.interactSound = new Sound("interactSound", "./sound/interact.wav", this.scene, null, {
+            loop: false,
+            autoplay: true,
+            //volume: 1.0
+        });
 
         Tools.LoadFileAsync("https://raw.githubusercontent.com/CedricGuillemet/dump/master/droidsans.ttf", true).then(
                     (data: ArrayBuffer | string) => 
@@ -75,6 +96,7 @@ class Game {
             }
             
             if (this.collided) {
+                this.interactSound.play();
                 console.log("collided");
                 clearInterval(this.fallingInterval);
                 this.setLanded();
@@ -91,7 +113,8 @@ class Game {
     public drawBlock() { 
 
 
-        var random = Math.floor(Math.random() * 3);
+        //var random = Math.floor(Math.random() * 5);
+        var random = Math.floor(Math.random() * 3) + 1;
 
         //random = 2;
         switch(random) {
@@ -104,7 +127,7 @@ class Game {
             case 2:
                 this.block = new TBlock(this.scene); 
                 break;
-            case 0:
+            case 3:
                 this.block = new ZBlock(this.scene); 
                 break;
             // case 4:
@@ -357,8 +380,32 @@ class Game {
                 this.gameBoard.spaces[x][layer][z] = false;
             }
         }
-
+        this.scoreSound.play();
         this.scene.blockfreeActiveMeshesAndRenderingGroups = true; //for optimization
+
+        // for (var i = 0; i < this._landed.length; i++) {
+        //     var position = this._landed[i].position;
+        //     if (position.y === layerheight) {
+        //         var mat = new StandardMaterial("mat", this.scene);
+        //         //mat.diffuseColor = BABYLON.Color3.Purple();
+        //         mat.emissiveColor = new Color3(0.1, 0.28, 0.8);
+        //         this._landed[i].material = mat;
+        //         //this._landed[i].material.backFaceCulling = false;
+        //     }
+        // }
+        // setTimeout(()=>{
+        //     for (var i = 0; i < this._landed.length; i++) {
+        //         var position = this._landed[i].position;
+        //         if (position.y === layerheight) {
+        //             var mat = new StandardMaterial("mat", this.scene);
+        //             //mat.diffuseColor = BABYLON.Color3.Purple();
+        //             mat.emissiveColor = new Color3(0.4, 0.28, 0.8);
+        //             this._landed[i].material = mat;
+        //             //this._landed[i].material.backFaceCulling = false;
+        //         }
+        //     }
+        // },1000);
+        
         for (var i = 0; i < this._landed.length; i++) {
             var position = this._landed[i].position;
             if (position.y === layerheight) {
@@ -519,7 +566,7 @@ class Game {
 
      private canRotate(axis: string): boolean { 
 
-        const _dummy =  this.block;
+        //var this.block =  this.block;
 
         if (this.block.type === "big cube" || this.block.type === "cube") {
             return true;
@@ -529,49 +576,49 @@ class Game {
         
         switch(axis) {
             case "x":
-                _dummy.rotate("x", this._rotation); //rotating dummy doesn't affect parent
+                this.block.rotate("x", this._rotation); //rotating dummy doesn't affect parent
                 //this.block.position = rotaPos;
                 this.scene.render();
                 this.fixRotationOffset();
-                occupied = this.gameBoard.isOccupiedWhenOutGrid(_dummy.getPositions() /*this.block.getPositions()*/); 
-                inBounds = this.gameBoard.inGrid(_dummy.getPositions());
+                occupied = this.gameBoard.isOccupiedWhenOutGrid(this.block.getPositions() /*this.block.getPositions()*/); 
+                inBounds = this.gameBoard.inGrid(this.block.getPositions());
                 
-                //console.log("positionAfterRo",_dummy.getPositions());
+                //console.log("positionAfterRo",this.block.getPositions());
                 
-                _dummy.rotate("x", -this._rotation); //reset rotation of dummy
+                this.block.rotate("x", -this._rotation); //reset rotation of dummy
                 this.scene.render();
                 this.fixRotationOffset();
                 break;
             case "y":
-                _dummy.rotate("y", -this._rotation); //rotating dummy doesn't affect parent
+                this.block.rotate("y", this._rotation); //rotating dummy doesn't affect parent
                 //this.block.position = rotaPos;
                 this.scene.render();
                 this.fixRotationOffset();
-                occupied = this.gameBoard.isOccupiedWhenOutGrid(_dummy.getPositions() /*this.block.getPositions()*/); 
-                inBounds = this.gameBoard.inGrid(_dummy.getPositions());
+                occupied = this.gameBoard.isOccupiedWhenOutGrid(this.block.getPositions() /*this.block.getPositions()*/); 
+                inBounds = this.gameBoard.inGrid(this.block.getPositions());
                 
-                //console.log("positionAfterRo",_dummy.getPositions());
+                //console.log("positionAfterRo",this.block.getPositions());
                 
-                _dummy.rotate("y", this._rotation); //reset rotation of dummy
+                this.block.rotate("y", -this._rotation); //reset rotation of dummy
                 this.scene.render();
                 this.fixRotationOffset();
                 break;
             case "z":
-                _dummy.rotate("z", -this._rotation); //rotating dummy doesn't affect parent
+                this.block.rotate("z", this._rotation); //rotating dummy doesn't affect parent
                 //this.block.position = rotaPos;
                 this.scene.render();
                 this.fixRotationOffset();
-                occupied = this.gameBoard.isOccupiedWhenOutGrid(_dummy.getPositions() /*this.block.getPositions()*/); 
-                inBounds = this.gameBoard.inGrid(_dummy.getPositions());
+                occupied = this.gameBoard.isOccupiedWhenOutGrid(this.block.getPositions() /*this.block.getPositions()*/); 
+                inBounds = this.gameBoard.inGrid(this.block.getPositions());
                 
-                //console.log("positionAfterRo",_dummy.getPositions());
+                //console.log("positionAfterRo",this.block.getPositions());
                 
-                _dummy.rotate("z", this._rotation); //reset rotation of dummy
+                this.block.rotate("z", -this._rotation); //reset rotation of dummy
                 this.scene.render();
                 this.fixRotationOffset();
                 break;
         } 
-        
+        console.log("after rotate", this.block.getPositions());
         if (occupied === false && inBounds === true) { //occupied is false - can rotate
             return true;
         }
@@ -596,15 +643,17 @@ class Game {
                                     this.scene.render();
                                     this.fixRotationOffset();
                                 }
+                                this.moveSound.play();
                                 break;
 
                             case "backward": //backward
+                                this.moveSound.play();
                                 if (this.gameBoard.inGrid(this.block.getPositions()) && this.gameBoard.canMove(this.block.getPositions(), "back")) {
                                     this.block.position.z -= 1;
-                                    this.block.parentCube.position.z -=1;
+                                    //this.block.parentCube.position.z -=1;
                                     this.scene.render();
                                     this.fixRotationOffset();
-                                }
+                                }                    
                                 break;
 
                             case "left": //left
@@ -613,6 +662,7 @@ class Game {
                                     this.scene.render();
                                     this.fixRotationOffset();
                                 }
+                                this.moveSound.play();
                                 break;
 
                             case "right": //right
@@ -621,9 +671,11 @@ class Game {
                                     this.scene.render();
                                     this.fixRotationOffset();
                                 }
+                                
                                 break;
 
                             case "down": //down
+                                this.moveSound.play();
                                 //TO FIX: press space bar continuously - canMove not called fast enough, meshes intersect
                                 if (this.gameBoard.inGrid(this.block.getPositions()) && this.gameBoard.canMove(this.block.getPositions(), "down")) {
                                     this.block.position.y -= 1;
@@ -639,12 +691,12 @@ class Game {
                             case "rotateX":
                                 //if rotated block would be in a position not found in getPositions array - should'nt move (create a canRotate function?)
                                  if (this.canRotate("x")) {
-                                   
-                                    console.log("Before rotate x",this.block.getPositions()[3]);
+                                    //this.moveSound.play();
+                                    //console.log("Before rotate x",this.block.getPositions()[3]);
                                     this.block.rotate("x", this._rotation); //rotate child 1st to se if it intersects?
                                     // this.block.parentCube.rotate(Axis.X, Math.PI/2, Space.WORLD);
-                                    // this.scene.render();
-                                    // this.fixRotationOffset();
+                                    this.scene.render();
+                                    this.fixRotationOffset();
                                     // //console.log("this.gameBoard.positions[0][1][4.5]",this.gameBoard.positions[0][-6][0]);
                                     // console.log("After rotate x",this.block.getPositions()[3]);
                                     }
@@ -652,7 +704,7 @@ class Game {
 
                             case "rotateY":
                                  if (this.canRotate("y")) {
-                                    console.log("rotate y");
+                                    //console.log("rotate y");
                                     this.block.rotate("y", this._rotation);
                                     this.scene.render();
                                     this.fixRotationOffset();
@@ -661,7 +713,7 @@ class Game {
 
                             case "rotateZ":
                                  if (this.canRotate("z")) {
-                                    console.log("rotate z");
+                                    //console.log("rotate z");
                                     this.block.rotate("z", this._rotation);
                                     this.scene.render(); 
                                     this.fixRotationOffset();
@@ -672,6 +724,7 @@ class Game {
                         this.fixRotationOffset();
                 }     
         ;
+
     }
 
     public isGameOver(): boolean { 
@@ -863,39 +916,6 @@ class Game {
         for (var x = 0; x < size; x++) {
             for (var z = 0; z < size ; z++) {
 
-                        // this.cloneBlock.position.x = this.gameBoard.positions[x][0][z].x;
-                        // this.cloneBlock.position.z = this.gameBoard.positions[x][0][z].z;
-                        // this.cloneBlock.position.y = this.block.position.y;
-                        
-                        // this.scene.render();
-                        // this.fixRotationOffsetCloneBlock();
-
-                        // if(this.gameBoard.inGrid(this.cloneBlock.getPositions()) === false){
-                        //     continue;
-                        // }
-
-                        // while(true){
-                        //     if(!this.gameBoard.inGrid(this.cloneBlock.getPositions()) 
-                        //     || this.gameBoard.isOccupied(this.cloneBlock.getPositions())){
-                        //         break;
-                        //     }
-                        //     this.cloneBlock.position.y-=1;
-                        //     this.scene.render();
-                        //     this.fixRotationOffsetCloneBlock();
-                        // }
-
-                        // this.cloneBlock.position.y+=1;
-                        // this.scene.render();
-                        // this.fixRotationOffsetCloneBlock();
-                        //this.cloneBlock.setRelPos(this.block.getPositions());
-                        // this.dummy.position.x = this.gameBoard.positions[x][0][z].x;
-                        // this.dummy.position.z = this.gameBoard.positions[x][0][z].z;
-                        // this.scene.render();
-                        // console.log("dummy pos", this.dummy.getPositions());
-                        //this.dummy
-                        //console.log("dummy pos", this.dummy.getPositions());
-
-                        //console.log("x",x + "z",z);
                         this.setPostionCloneBlock(x,z);
                         //console.log("clone block relPos",this.cloneBlock.getRelPos());
                         
@@ -940,10 +960,14 @@ class Game {
                 
                 //bestPositon = this.cloningPosition(this.cloneBlock.position);
                 //best = this.cloneBlock;
+                
             }
         }
         //return;
         // rotate 0y
+        // if(this.cloneBlock.type === "big cube"){
+        //     return;
+        // }
           for(var ystep = 1; ystep < 4; ystep++){
                     this.dummy.rotate("y",this._rotation);
                     this.scene.render();
@@ -1089,7 +1113,7 @@ class Game {
                         bestPositon = this.cloningPosition(this.cloneBlock.position);
                         rotate = "x";
                         bestStep = 1;
-                        bestStep = ystep;
+                        bestYStep = ystep;
                     }
                     }
                 }
@@ -1369,7 +1393,7 @@ class Game {
                     // this.scene.render();
                     // this.fixRotationOffsetCloneBlock();
                     // this.cloneBlock.setRelPos(this.cloneBlock.getPositions());
-                    this.dummy.rotate("Y",this._rotation);
+                    this.dummy.rotate("y",this._rotation);
                     this.scene.render();
                     this.fixRotationOffsetDummy();
                     this.cloneBlock.setRelPos(this.dummy.getPositions()); 
@@ -2321,20 +2345,58 @@ class Game {
                 }
             }
 
-        } else {
-            
+        } else if(this.cloneBlock.type == "I block"){
+            // rotate x
+                this.dummy.rotate("x",this._rotation);
+                this.scene.render();
+                this.fixRotationOffsetDummy();
+                this.cloneBlock.setRelPos(this.dummy.getPositions());
 
+            
+            for(var ystep = 1; ystep < 4; ystep++){
+                this.dummy.rotate("y",this._rotation);
+                this.scene.render();
+                this.fixRotationOffsetDummy();
+                this.cloneBlock.setRelPos(this.dummy.getPositions());
+                
+                for (var x = 0; x < size; x++) {
+                    for (var z = 0; z < size ; z++) {
+                        this.setPostionCloneBlock(x,z);
+                        if(this.gameBoard.inGrid(this.cloneBlock.getRelPos()) === false){
+                            continue;
+                        }
+                        while(true){
+                            if(!this.gameBoard.inGrid(this.cloneBlock.getRelPos()) 
+                            || this.gameBoard.isOccupied(this.cloneBlock.getRelPos())){
+                                break;
+                            }
+                            this.cloneBlock.moveRelPosDown();
+                            this.fixOffSetCloneBlock();
+                        }
+                    this.cloneBlock.moveRelPosUp();
+                    this.fixOffSetCloneBlock();
+                    this.updateCloneSpaces(this.cloneBlock.getRelPos());
+                    var score = this.computeScore();
+                    this.resetCloneSpaces(this.cloneBlock.getRelPos());
+                    if(score > bestScore){
+                        bestScore = score;
+                        bestPositon = this.cloningPosition(this.cloneBlock.position);
+                        bestStep = 1;
+                        rotate = "x";
+                        bestYStep = ystep;                
+                        }
+                    }
+                }
+            }
+                // this.dummy.rotate("x",this._rotation);
+                // this.scene.render();
+                // this.fixRotationOffsetDummy();
+                // this.cloneBlock.setRelPos(this.dummy.getPositions());
             
         
         }
 
-
         //this.block.position.y = 6.5;
-
-
-
-
-
         for(var i = 1; i <= bestStep;i++){
             this.block.rotate(rotate,this._rotation);
             this.scene.render();
@@ -2436,6 +2498,8 @@ class Game {
             return new Cube(this.scene); 
         } else if(this.block.type === "L block"){
             return new LBlock(this.scene); 
+        } else if(this.block.type === "I block"){
+            return new IBlock(this.scene); 
         } 
         return new ZBlock(this.scene); 
     }
